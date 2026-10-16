@@ -1,0 +1,8 @@
+# 本地文件，含真实密钥，不要提交
+data/.config.yaml
+
+# 儿歌 mp3 有版权，自行添加，不要提交
+music/*.mp3
+music/*.wav
+
+.DS_Store

@@ -1,0 +1,26 @@
+--- /tmp/pristine/stackchan-mcp-21ab663644d3cc3e24492ec11fd8ef222dc8e24a/firmware/main/application.cc	2026-08-09 22:13:24
++++ application.cc	2026-10-16 18:29:32
+@@ -392,8 +392,10 @@
+     // Check for new assets version
+     CheckAssetsVersion();
+ 
+-    // Check for new firmware version
+-    CheckNewVersion();
++    // New-version check disabled for this deployment: we flash manually via
++    // esptool and neither the official cloud nor the local xiaozhi server
++    // serves a usable OTA response, so the check only produced retry alerts.
++    // CheckNewVersion();
+ 
+     // Initialize the protocol
+     InitializeProtocol();
+@@ -677,8 +679,9 @@
+             auto text = cJSON_GetObjectItem(root, "text");
+             if (cJSON_IsString(text)) {
+                 ESP_LOGI(TAG, ">> %s", text->valuestring);
+-                Schedule([display, message = std::string(text->valuestring)]() {
++                Schedule([display, &board, message = std::string(text->valuestring)]() {
+                     display->SetChatMessage("user", message.c_str());
++                    board.OnUserSttText(message.c_str());
+                 });
+             }
+         } else if (strcmp(type->valuestring, "llm") == 0) {

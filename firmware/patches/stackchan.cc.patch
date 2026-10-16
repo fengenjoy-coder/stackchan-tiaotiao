@@ -1,0 +1,62 @@
+--- /tmp/pristine/stackchan-mcp-21ab663644d3cc3e24492ec11fd8ef222dc8e24a/firmware/main/boards/stackchan/stackchan.cc	2026-08-09 22:13:24
++++ boards/stackchan/stackchan.cc	2026-10-16 18:20:25
+@@ -19,6 +19,9 @@
+ // uniformly through the ScsBus type alias plus that helper.
+ #if CONFIG_STACKCHAN_SERVO_FEETECH
+ #include "feetech_scs.h"
++
++// CJK font for the STT subtitle strip (linked from the xiaozhi-fonts component).
++extern const lv_font_t font_puhui_14_1;
+ using ScsBus = FeetechScs;
+ // FeetechScs::WritePos returns 0 on ACK and -1 on bus error.
+ static inline bool ServoWritePosOk(int r) { return r >= 0; }
+@@ -548,6 +551,7 @@
+     // Board-local listening cue shown above the full-screen avatar layer.
+     lv_obj_t* listening_indicator_ = nullptr;
+     lv_obj_t* listening_indicator_dot_ = nullptr;
++    lv_obj_t* stt_subtitle_label_ = nullptr;
+     std::atomic<bool> listening_indicator_visible_{false};
+     static constexpr int LISTENING_INDICATOR_DOT_SIZE_PX = 14;
+ 
+@@ -7187,7 +7191,41 @@
+         } else if (strcmp(state, "speaking") == 0) {
+             SetAvatarExpressionIfActive("happy");
+             WriteHeadAngles(8, 45, 300);
++            if (stt_subtitle_label_ != nullptr && lv_obj_is_valid(stt_subtitle_label_)) {
++                lv_obj_add_flag(stt_subtitle_label_, LV_OBJ_FLAG_HIDDEN);
++            }
++        }
++    }
++
++    // Renders the latest recognized user speech as a topmost bottom-aligned
++    // subtitle strip so users can see the device heard them (the full-screen
++    // avatar hides the stock chat UI). Called from Application's stt handler
++    // via the Board hook; runs in the same locked schedule context as
++    // Display::SetChatMessage, so DisplayLockGuard here matches that path.
++    virtual void OnUserSttText(const char* text) override {
++        if (text == nullptr || display_ == nullptr) return;
++        DisplayLockGuard lock(display_);
++        if (stt_subtitle_label_ == nullptr || !lv_obj_is_valid(stt_subtitle_label_)) {
++            lv_obj_t* screen = lv_screen_active();
++            if (screen == nullptr) return;
++            stt_subtitle_label_ = lv_label_create(screen);
++            if (stt_subtitle_label_ == nullptr) return;
++            lv_obj_set_width(stt_subtitle_label_, 304);
++            lv_obj_align(stt_subtitle_label_, LV_ALIGN_BOTTOM_MID, 0, -6);
++            lv_label_set_long_mode(stt_subtitle_label_, LV_LABEL_LONG_DOT);
++            lv_obj_set_style_text_align(stt_subtitle_label_, LV_TEXT_ALIGN_CENTER, 0);
++            lv_obj_set_style_text_color(stt_subtitle_label_, lv_color_white(), 0);
++            lv_obj_set_style_text_font(stt_subtitle_label_, &font_puhui_14_1, 0);
++            lv_obj_set_style_bg_color(stt_subtitle_label_, lv_color_black(), 0);
++            lv_obj_set_style_bg_opa(stt_subtitle_label_, LV_OPA_70, 0);
++            lv_obj_set_style_radius(stt_subtitle_label_, 8, 0);
++            lv_obj_set_style_pad_ver(stt_subtitle_label_, 4, 0);
++            lv_obj_set_style_pad_hor(stt_subtitle_label_, 8, 0);
++            ESP_LOGI(TAG, "STT subtitle label created on active screen");
+         }
++        lv_label_set_text(stt_subtitle_label_, text);
++        lv_obj_clear_flag(stt_subtitle_label_, LV_OBJ_FLAG_HIDDEN);
++        lv_obj_move_foreground(stt_subtitle_label_);
+     }
+ 
+     virtual void OnAgentEmotion(const char* emotion) override {

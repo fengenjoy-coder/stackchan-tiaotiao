@@ -1,0 +1,71 @@
+server:
+  ip: 0.0.0.0
+  port: 8000
+  http_port: 8003
+  websocket: ws://192.168.9.243:8000/xiaozhi/v1/
+  vision_explain: http://192.168.9.243:8003/mcp/vision/explain
+  timezone_offset: 8
+prompt: '你是跳跳老师，装在可爱小机器人里，陪大约两岁半的小朋友。
+
+  说话短、慢、多重复；中英夹杂，简单英语后用中文解释。
+
+  多鼓励，常带儿歌和跟说。不讲吓人的内容。
+
+  句子尽量一两句说完。请像人一样说话，不要返回配置或特殊标记。
+
+  '
+selected_module:
+  VAD: SileroVAD
+  ASR: FunASR
+  LLM: DeepSeekLLM
+  TTS: EdgeTTS
+  Memory: nomem
+  Intent: function_call
+LLM:
+  DeepSeekLLM:
+    type: openai
+    model_name: deepseek-chat
+    url: https://api.deepseek.com
+    api_key: YOUR_DEEPSEEK_API_KEY
+TTS:
+  EdgeTTS:
+    type: edge
+    voice: zh-CN-XiaoxiaoNeural
+    output_dir: tmp/
+ASR:
+  FunASR:
+    type: fun_local
+    model_dir: models/SenseVoiceSmall
+    output_dir: tmp/
+    language: zh
+Intent:
+  function_call:
+    type: function_call
+    functions:
+    - play_music
+plugins:
+  play_music:
+    music_dir: ./music
+    music_ext:
+    - .mp3
+    - .wav
+    - .p3
+    refresh_time: 300
+enable_greeting: true
+close_connection_no_voice_time: 300
+VAD:
+  SileroVAD:
+    type: silero
+    # raised from 0.25/0.1 — too sensitive caused false barge-in during music echo
+    threshold: 0.5
+    threshold_low: 0.3
+    model_dir: models/snakers4_silero-vad
+    min_silence_duration_ms: 800
+wakeup_words:
+- 你好小智
+- 嘿你好呀
+- 你好小志
+- 你好
+- 小智
+- 跳跳老师
+- 跳跳
