@@ -1,9 +1,11 @@
 # StackChan 跳跳老师 — 儿童陪伴机器人全栈方案
 
 M5Stack StackChan（K151）+ 自编译固件 + 本地小智服务器，给两岁半宝宝的 AI 陪伴机器人：
-**"跳跳老师"** 中文人设、哪吒主题表情、屏幕字幕、本地儿歌点播。唤醒词用 WakeNet "你好小智"（MultiNet 自定义词在 PR#370 有稳定性 bug，见踩坑记录）。
+**"跳跳老师"** 中文人设、像素机器人主题表情、屏幕字幕、本地儿歌点播。唤醒词用 WakeNet "你好小智"（MultiNet 自定义词在 PR#370 有稳定性 bug，见踩坑记录）。
 
-![哪吒表情](firmware/avatar/pngs/idle.png)
+![像素机器人表情](firmware/avatar-robot/pngs/idle.png)
+
+> 屏幕形象默认是像素机器人版（`firmware/avatar-robot/`），哪吒 chibi 版在 `firmware/avatar/` 备选，替换后重新运行 convert_avatars.py + 编译即可。
 
 ## 硬件
 
@@ -52,7 +54,7 @@ M 芯片 Mac 已配置 `platform: linux/arm64` 原生镜像（ASR 快 10 倍）�
 
 ### 4. 测试
 
-- 说 **"你好小智"** → 屏幕哪吒睁眼、字幕条显示识别文字
+- 说 **"你好小智"** → 屏幕机器人表情睁眼、字幕条显示识别文字
 - 说 **"唱首小星星"** → 播放 `server/music/` 里的歌
 
 往 `server/music/` 丢 mp3，5 分钟内自动入库，无需重启。
@@ -74,7 +76,7 @@ M 芯片 Mac 已配置 `platform: linux/arm64` 原生镜像（ASR 快 10 倍）�
 |---|---|
 | 唤醒词 | WakeNet **"你好小智"**（快且稳定；MultiNet 自定义词有 bug，见踩坑第 3 条） |
 | 对话模式 | 连续对话：唤醒后可多轮，不用每句都喊 |
-| 屏幕形象 | 哪吒 chibi 六表情 + 眨眼/口型（`firmware/avatar/pngs/`） |
+| 屏幕形象 | 像素机器人（黑底）六表情 + 眨眼/口型（`firmware/avatar-robot/pngs/`），哪吒版备选 |
 | 字幕条 | 识别文字实时显示在屏幕底部（说完约 1 秒内出现） |
 | 触摸/摸头 | 点屏幕或摸头也能触发对话（单次按压模式） |
 | 版本检查 | 已关闭（无可用 OTA 源，避免弹错打扰） |
@@ -125,7 +127,7 @@ python3 scripts/release.py stackchan
 ```
 firmware/bin/            预编译固件（app + 完整镜像）
 firmware/patches/        对 PR370 源码的补丁
-firmware/avatar/         哪吒表情生成脚本 + PNG 帧
+firmware/avatar/         像素机器人表情生成脚本 + PNG 帧（哪吒版在 firmware/avatar/）
 server/                  docker 服务器（小智 ESP32 服务端）
 scripts/                 一键刷机脚本
 ```
