@@ -1,7 +1,7 @@
 # StackChan 跳跳老师 — 儿童陪伴机器人全栈方案
 
 M5Stack StackChan（K151）+ 自编译固件 + 本地小智服务器，给两岁半宝宝的 AI 陪伴机器人：
-**"跳跳老师"** 中文人设、自定义唤醒词、哪吒主题表情、屏幕字幕、本地儿歌点播。
+**"跳跳老师"** 中文人设、哪吒主题表情、屏幕字幕、本地儿歌点播。唤醒词用 WakeNet "你好小智"（MultiNet 自定义词在 PR#370 有稳定性 bug，见踩坑记录）。
 
 ![哪吒表情](firmware/avatar/pngs/idle.png)
 
@@ -52,7 +52,7 @@ M 芯片 Mac 已配置 `platform: linux/arm64` 原生镜像（ASR 快 10 倍）�
 
 ### 4. 测试
 
-- 说 **"跳跳老师"** → 屏幕哪吒睁眼、字幕条显示识别文字
+- 说 **"你好小智"** → 屏幕哪吒睁眼、字幕条显示识别文字
 - 说 **"唱首小星星"** → 播放 `server/music/` 里的歌
 
 往 `server/music/` 丢 mp3，5 分钟内自动入库，无需重启。
@@ -60,7 +60,7 @@ M 芯片 Mac 已配置 `platform: linux/arm64` 原生镜像（ASR 快 10 倍）�
 ## 系统架构
 
 ```
-说话 → StackChan(本地唤醒: MultiNet "跳跳老师")
+说话 → StackChan(本地唤醒: WakeNet "你好小智")
      → Mac docker: FunASR 语音识别(SenseVoiceSmall 本地)
      → DeepSeek 大模型("跳跳老师"人设 prompt)
      → EdgeTTS 语音合成
@@ -72,7 +72,7 @@ M 芯片 Mac 已配置 `platform: linux/arm64` 原生镜像（ASR 快 10 倍）�
 
 | 特性 | 说明 |
 |---|---|
-| 唤醒词 | MultiNet 自定义 **"跳跳老师"**（阈值 15%，改配置重编译可换） |
+| 唤醒词 | WakeNet **"你好小智"**（快且稳定；MultiNet 自定义词有 bug，见踩坑第 3 条） |
 | 对话模式 | 连续对话：唤醒后可多轮，不用每句都喊 |
 | 屏幕形象 | 哪吒 chibi 六表情 + 眨眼/口型（`firmware/avatar/pngs/`） |
 | 字幕条 | 识别文字实时显示在屏幕底部（说完约 1 秒内出现） |
@@ -81,7 +81,7 @@ M 芯片 Mac 已配置 `platform: linux/arm64` 原生镜像（ASR 快 10 倍）�
 
 ## 二次开发
 
-### 换唤醒词
+### 换唤醒词（⚠️ MultiNet 模式一次对话后会卡死 AFE 管道，见踩坑第 3 条，生产建议保持 WakeNet）
 
 改 `firmware/sdkconfig.defaults.local` 里：
 ```
@@ -113,11 +113,12 @@ python3 scripts/release.py stackchan
 
 1. **`xiaozhi.bin` 是 app-only 镜像，刷 0x0 会砖**（`Invalid image block`）。完整镜像 `merged-binary.bin` 刷 0x0
 2. **官方 v1.17.0 固件语音唤醒只生效一次**（之后必须摸头），对话式修复在 PR #370，至今未合并
+3. **MultiNet 自定义唤醒词有稳定性 bug**：一次对话后 AFE 管道卡死（Ringbuffer FEED full）、唤醒彻底失效——PR #370 只验证过 WakeNet 模式，生产用 WakeNet
 3. **PR370 的动作网关（action gateway）不能指向小智服务器**——会卡死音频管道（AFE Ringbuffer 满、设备变聋）。必须留空
-4. **OTA 版本检查要么指向能用的源，要么关掉**——固件里已注释掉 `CheckNewVersion()`，重编译时注意保留
-5. **M 芯片 Mac 跑服务器务必用 arm64 镜像**——amd64 走 Rosetta 后 ASR 识别要 3 秒且识别率暴跌
-6. NVS 存 WiFi/服务器配置在 0x9000 分区，**只刷 0x20000 的 app 分区可以保留配置**；全量刷要重配网
-7. esptool 刷完设备可能停在"等待下载"模式，**捅 RST** 即恢复正常开机
+5. **OTA 版本检查要么指向能用的源，要么关掉**——固件里已注释掉 `CheckNewVersion()`，重编译时注意保留
+6. **M 芯片 Mac 跑服务器务必用 arm64 镜像**——amd64 走 Rosetta 后 ASR 识别要 3 秒且识别率暴跌
+7. NVS 存 WiFi/服务器配置在 0x9000 分区，**只刷 0x20000 的 app 分区可以保留配置**；全量刷要重配网
+8. esptool 刷完设备可能停在"等待下载"模式，**捅 RST** 即恢复正常开机
 
 ## 目录结构
 
