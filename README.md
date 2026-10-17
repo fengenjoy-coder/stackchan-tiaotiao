@@ -6,6 +6,8 @@ M5Stack StackChan（K151）+ 自编译固件 + 本地小智服务器，给两岁
 ![像素机器人表情](firmware/avatar-robot/pngs/idle.png)
 
 > 屏幕形象默认是像素机器人版（`firmware/avatar-robot/`），哪吒 chibi 版在 `firmware/avatar/` 备选，替换后重新运行 convert_avatars.py + 编译即可。
+>
+> ⚠️ **当前固件实测**：2026-10-17 上机版本为 MultiNet 唤醒词"跳跳老师"（此二进制 hash 前缀 702cc9316e51a788），唤醒+多轮对话+哪吒/机器人表情工作正常。sdkconfig.defaults.local 里的唤醒配置以实际编译时的文件状态为准（本仓库拷贝可能与二进制不完全对应，以二进制为准）。
 
 ## 硬件
 
@@ -74,7 +76,7 @@ M 芯片 Mac 已配置 `platform: linux/arm64` 原生镜像（ASR 快 10 倍）�
 
 | 特性 | 说明 |
 |---|---|
-| 唤醒词 | WakeNet **"你好小智"**（快且稳定；MultiNet 自定义词有 bug，见踩坑第 3 条） |
+| 唤醒词 | 当前上机：**MultiNet "跳跳老师"**；备选 WakeNet "你好小智"（MultiNet 的 AFE 卡死问题见踩坑第 3 条，如复发请回退 WakeNet 并重编译） |
 | 对话模式 | 连续对话：唤醒后可多轮，不用每句都喊 |
 | 屏幕形象 | 像素机器人（黑底）六表情 + 眨眼/口型（`firmware/avatar-robot/pngs/`），哪吒版备选 |
 | 字幕条 | 识别文字实时显示在屏幕底部（说完约 1 秒内出现） |
