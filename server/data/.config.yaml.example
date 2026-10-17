@@ -16,23 +16,31 @@ prompt: '你是跳跳老师，装在可爱小机器人里，陪大约两岁半�
   '
 selected_module:
   VAD: SileroVAD
-  ASR: FunASR
-  LLM: DeepSeekLLM
+  ASR: DoubaoStreamASRV2
+  LLM: OpenAILLM
   TTS: EdgeTTS
   Memory: nomem
   Intent: function_call
 LLM:
-  DeepSeekLLM:
+  OpenAILLM:
     type: openai
-    model_name: deepseek-chat
-    url: https://api.deepseek.com
-    api_key: YOUR_DEEPSEEK_API_KEY
+    model_name: doubao-seed-2-1-lite-260915
+    url: https://ark.cn-beijing.volces.com/api/v3
+    api_key: YOUR_PLACEHOLDER
 TTS:
   EdgeTTS:
     type: edge
     voice: zh-CN-XiaoxiaoNeural
     output_dir: tmp/
 ASR:
+  DoubaoStreamASRV2:
+    type: doubao_stream
+    appid: "2488090517"
+    access_token: YOUR_PLACEHOLDER
+    resource_id: volc.seedasr.sauc.duration
+    enable_multilingual: False
+    end_window_size: 200
+    output_dir: tmp/
   FunASR:
     type: fun_local
     model_dir: models/SenseVoiceSmall
