@@ -1,5 +1,5 @@
 --- /tmp/pristine/stackchan-mcp-21ab663644d3cc3e24492ec11fd8ef222dc8e24a/firmware/main/boards/common/board.h	2026-08-09 22:13:24
-+++ boards/common/board.h	2026-10-16 18:19:56
++++ boards/common/board.h	2026-10-17 14:43:27
 @@ -98,6 +98,7 @@
      // other boards remain source-compatible without implementing a UI bridge.
      virtual void OnAgentStateChanged(const char* state) { (void)state; }

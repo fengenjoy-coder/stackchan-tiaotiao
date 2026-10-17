@@ -1,5 +1,5 @@
 --- /tmp/pristine/stackchan-mcp-21ab663644d3cc3e24492ec11fd8ef222dc8e24a/firmware/main/application.cc	2026-08-09 22:13:24
-+++ application.cc	2026-10-16 18:29:32
++++ application.cc	2026-10-17 14:43:27
 @@ -392,8 +392,10 @@
      // Check for new assets version
      CheckAssetsVersion();

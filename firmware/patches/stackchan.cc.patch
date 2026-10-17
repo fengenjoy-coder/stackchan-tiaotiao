@@ -1,5 +1,5 @@
 --- /tmp/pristine/stackchan-mcp-21ab663644d3cc3e24492ec11fd8ef222dc8e24a/firmware/main/boards/stackchan/stackchan.cc	2026-08-09 22:13:24
-+++ boards/stackchan/stackchan.cc	2026-10-16 18:20:25
++++ boards/stackchan/stackchan.cc	2026-10-17 15:19:34
 @@ -19,6 +19,9 @@
  // uniformly through the ScsBus type alias plus that helper.
  #if CONFIG_STACKCHAN_SERVO_FEETECH
@@ -18,13 +18,51 @@
      std::atomic<bool> listening_indicator_visible_{false};
      static constexpr int LISTENING_INDICATOR_DOT_SIZE_PX = 14;
  
-@@ -7187,7 +7191,41 @@
+@@ -4368,6 +4372,7 @@
+         if (!EnsureAvatarObject()) return false;
+         lv_image_set_src(avatar_img_, dsc);
+         lv_obj_move_foreground(avatar_img_);
++        RaiseSttSubtitleLocked();
+         BringListeningIndicatorToFrontLocked();
+         return true;
+     }
+@@ -4498,13 +4503,18 @@
+         }
+         // Center on the 320x240 LCD and upscale 160x120 -> ~320x240 (2x).
+         // lv_image_set_scale uses 256 = 1.0x; 512 = 2.0x.
+-        lv_image_set_scale(avatar_img_, 512);
+-        lv_obj_align(avatar_img_, LV_ALIGN_CENTER, 0, 0);
++        // Layout contract (subtitle/status-bar strips): the avatar occupies
++        // the middle band only — top ~30 px stays clear for the stock status
++        // bar and bottom ~50 px for the STT subtitle strip. Scale 340 =
++        // 212x159 px image, nudged 10 px up from center.
++        lv_image_set_scale(avatar_img_, 400);
++        lv_obj_align(avatar_img_, LV_ALIGN_CENTER, 0, -10);
+         lv_obj_clear_flag(avatar_img_, LV_OBJ_FLAG_SCROLLABLE);
+         // Keep the avatar visually on top of the chat UI's emoji_label_,
+         // chat bubbles, etc. The status bar (clock/battery) lives on a
+         // separate sibling and is moved to foreground later if needed.
+         lv_obj_move_foreground(avatar_img_);
++        RaiseSttSubtitleLocked();
+         ESP_LOGI(TAG, "Avatar lv_image created on active screen");
+         return true;
+     }
+@@ -7187,9 +7197,52 @@
          } else if (strcmp(state, "speaking") == 0) {
              SetAvatarExpressionIfActive("happy");
              WriteHeadAngles(8, 45, 300);
 +            if (stt_subtitle_label_ != nullptr && lv_obj_is_valid(stt_subtitle_label_)) {
 +                lv_obj_add_flag(stt_subtitle_label_, LV_OBJ_FLAG_HIDDEN);
 +            }
+         }
+     }
+ 
++    // Keep the STT subtitle label above the avatar: every code path that
++    // moves avatar_img_ to foreground must re-raise the subtitle afterwards
++    // (see the two lv_obj_move_foreground(avatar_img_) call sites).
++    void RaiseSttSubtitleLocked() {
++        if (stt_subtitle_label_ != nullptr && lv_obj_is_valid(stt_subtitle_label_)) {
++            lv_obj_move_foreground(stt_subtitle_label_);
 +        }
 +    }
 +
@@ -42,7 +80,7 @@
 +            stt_subtitle_label_ = lv_label_create(screen);
 +            if (stt_subtitle_label_ == nullptr) return;
 +            lv_obj_set_width(stt_subtitle_label_, 304);
-+            lv_obj_align(stt_subtitle_label_, LV_ALIGN_BOTTOM_MID, 0, -6);
++            lv_obj_align(stt_subtitle_label_, LV_ALIGN_BOTTOM_MID, 0, -44);
 +            lv_label_set_long_mode(stt_subtitle_label_, LV_LABEL_LONG_DOT);
 +            lv_obj_set_style_text_align(stt_subtitle_label_, LV_TEXT_ALIGN_CENTER, 0);
 +            lv_obj_set_style_text_color(stt_subtitle_label_, lv_color_white(), 0);
@@ -53,10 +91,12 @@
 +            lv_obj_set_style_pad_ver(stt_subtitle_label_, 4, 0);
 +            lv_obj_set_style_pad_hor(stt_subtitle_label_, 8, 0);
 +            ESP_LOGI(TAG, "STT subtitle label created on active screen");
-         }
++        }
 +        lv_label_set_text(stt_subtitle_label_, text);
 +        lv_obj_clear_flag(stt_subtitle_label_, LV_OBJ_FLAG_HIDDEN);
 +        lv_obj_move_foreground(stt_subtitle_label_);
-     }
- 
++    }
++
      virtual void OnAgentEmotion(const char* emotion) override {
+         if (emotion == nullptr) return;
+         // Start from a safe idle pose, then override it for known labels.

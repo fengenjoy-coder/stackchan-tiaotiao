@@ -3,11 +3,11 @@
 M5Stack StackChan（K151）+ 自编译固件 + 本地小智服务器，给两岁半宝宝的 AI 陪伴机器人：
 **"跳跳老师"** 中文人设、像素机器人主题表情、屏幕字幕、本地儿歌点播。唤醒词用 WakeNet "你好小智"（MultiNet 自定义词在 PR#370 有稳定性 bug，见踩坑记录）。
 
-![像素机器人表情](firmware/avatar-robot/pngs/idle.png)
+![像素机器人表情（透明背景）](firmware/avatar-robot/pngs/idle.png)
 
 > 屏幕形象默认是像素机器人版（`firmware/avatar-robot/`），哪吒 chibi 版在 `firmware/avatar/` 备选，替换后重新运行 convert_avatars.py + 编译即可。
 >
-> ⚠️ **当前固件实测**：2026-10-17 上机版本为 MultiNet 唤醒词"跳跳老师"（此二进制 hash 前缀 702cc9316e51a788），唤醒+多轮对话+哪吒/机器人表情工作正常。sdkconfig.defaults.local 里的唤醒配置以实际编译时的文件状态为准（本仓库拷贝可能与二进制不完全对应，以二进制为准）。
+> ✅ **当前固件（2026-10-17 最终版）**：MultiNet 唤醒词"跳跳老师" + **透明背景像素机器人**（ARGB8888，悬浮在白色界面上）+ 顶部电量栏 + 底部字幕区（用户字幕在头像脚下，agent 回复在屏幕底部，互不遮挡）。已验收：唤醒/多轮对话/表情/字幕全部正常。
 
 ## 硬件
 
@@ -78,10 +78,10 @@ M 芯片 Mac 已配置 `platform: linux/arm64` 原生镜像（ASR 快 10 倍）�
 |---|---|
 | 唤醒词 | 当前上机：**MultiNet "跳跳老师"**；备选 WakeNet "你好小智"（MultiNet 的 AFE 卡死问题见踩坑第 3 条，如复发请回退 WakeNet 并重编译） |
 | 对话模式 | 连续对话：唤醒后可多轮，不用每句都喊 |
-| 屏幕形象 | 像素机器人（黑底）六表情 + 眨眼/口型（`firmware/avatar-robot/pngs/`），哪吒版备选 |
-| 字幕条 | 识别文字实时显示在屏幕底部（说完约 1 秒内出现） |
+| 屏幕形象 | 像素机器人**透明背景**（ARGB8888，128x96）+ 眨眼/口型，`firmware/avatar-robot/pngs/` 为透明 PNG，用 `convert_avatars_argb.py` 转换；哪吒版在 `firmware/avatar/`（RGB565 不透明） |
+| 字幕条 | 识别文字显示在头像脚下（底部留空给 agent 回复），说完约 1 秒内出现，回复时自动隐藏 |
 | 触摸/摸头 | 点屏幕或摸头也能触发对话（单次按压模式） |
-| 版本检查 | 已关闭（无可用 OTA 源，避免弹错打扰） |
+| 版本检查 | 已关闭（补丁注释掉 CheckNewVersion，见 firmware/patches/） |
 
 ## 二次开发
 
@@ -122,7 +122,9 @@ python3 scripts/release.py stackchan
 5. **OTA 版本检查要么指向能用的源，要么关掉**——固件里已注释掉 `CheckNewVersion()`，重编译时注意保留
 6. **M 芯片 Mac 跑服务器务必用 arm64 镜像**——amd64 走 Rosetta 后 ASR 识别要 3 秒且识别率暴跌
 7. NVS 存 WiFi/服务器配置在 0x9000 分区，**只刷 0x20000 的 app 分区可以保留配置**；全量刷要重配网
-8. esptool 刷完设备可能停在"等待下载"模式，**捅 RST** 即恢复正常开机
+8. esptool 刷完设备可能停在"等待下载"模式，**捅 RST** 即恢复正常开机；**刷机后不 RST 设备会继续跑内存里的旧固件**，测试前务必确认重启过
+9. ARGB8888 头像 160x120 会让 app 超出分区（超 265KB），必须用 128x96（672KB）；转换脚本 `firmware/avatar-robot/convert_avatars_argb.py`
+10. 全屏头像会盖住股票 UI 和字幕：缩放 400（中部条带布局）+ 字幕每次更新后 `lv_obj_move_foreground`，头像更新后也要重新置顶字幕（RaiseSttSubtitleLocked）
 
 ## 目录结构
 
