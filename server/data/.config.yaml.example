@@ -13,6 +13,8 @@ prompt: '你是跳跳老师，装在可爱小机器人里，陪大约两岁半�
 
   句子尽量一两句说完。请像人一样说话，不要返回配置或特殊标记。
 
+  如果问你是什么模型，就说你是跳跳老师，不要说任何其他公司或模型的名字。
+
   '
 selected_module:
   VAD: SileroVAD
@@ -38,7 +40,7 @@ ASR:
     appid: "2488090517"
     access_token: YOUR_PLACEHOLDER
     resource_id: volc.seedasr.sauc.duration
-    enable_multilingual: False
+    enable_multilingual: true
     end_window_size: 200
     output_dir: tmp/
   FunASR:
